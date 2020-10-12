@@ -1,0 +1,4 @@
+program var test begin do_somethingp {;
+    {a1234b, {, a1234b integer}}
+    read(a1234b, {, a1234b})
+} end.
