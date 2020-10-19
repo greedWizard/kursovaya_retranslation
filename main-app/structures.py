@@ -89,3 +89,44 @@ class Declare(Structure):
     
     def __repr__(self):
         return f'объявление переменной'
+
+
+class OpsBegin(Structure):
+    def __init__(self, line : int, line_text: str, name : str):
+        super(OpsBegin, self).__init__(line, line_text, name)
+    
+    def __repr__(self):
+        return f'начало составного оператора'
+
+
+class EmptyLine(Structure):
+    def __init__(self, line : int, line_text: str, name : str):
+        super(EmptyLine, self).__init__(line, line_text, name)
+    
+    def __repr__(self):
+        return f'пустая строка'
+
+
+class OpsEnd(Structure):
+    def __init__(self, line : int, line_text: str, name : str):
+        super(OpsEnd, self).__init__(line, line_text, name)
+    
+    def __repr__(self):
+        return f'конец составного оператора'
+
+
+class KeyWord(Structure):
+    def __init__(self, line : int, line_text: str, name : str):
+        super(KeyWord, self).__init__(line, line_text, name)
+    
+    def __repr__(self):
+        return f'ключевое слово {self.name}'
+
+
+class Assignment(Structure):
+    def __init__(self, line : int, line_text: str, name : str):
+        super(Assignment, self).__init__(line, line_text, name)
+    
+    def __repr__(self):
+        return f'назначение переменной {self.name}'
+
