@@ -2,8 +2,27 @@ import string
 import re
 
 
-class LexException(Exception):
+class Error(Exception):
     pass
+
+
+class LexError(Error):
+    pass
+
+
+class SyntaxError(Error):
+    pass
+
+
+class Lexem:
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return f'<Лексема "{self.name}">'
+
+    def __str__(self):
+        return f'<Лексема "{self.name}">'
 
 
 class ProgramIterator:
@@ -20,9 +39,11 @@ class ProgramIterator:
 
 
 class Program:
+    name = ''
+
     def __init__(self, text : str):
         self.lines = text.split('\n')
-
+        
     def __iter__(self):
         return ProgramIterator(self)
 
@@ -43,90 +64,191 @@ class Structure:
         raise NotImplementedError('Not implemented')
 
 
-class Identifier(Structure):
+class IdentifierKW(Structure):
+    REGEX = r'^[a-z]{1}[0-9]+[a-z]{1}$'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(Identifier, self).__init__(line, line_text, name)
+        super(IdentifierKW, self).__init__(line, line_text, name)
     
     def __repr__(self):
         return f'идентификатор "{self.name}"'
 
 
-class ProgramBegin(Structure):
+class ProgramKW(Structure):
+    REGEX = r'program'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(ProgramBegin, self).__init__(line, line_text, name)
+        super(ProgramKW, self).__init__(line, line_text, name)
     
     def __repr__(self):
-        return f'начало программы с описанием "{self.name}"'
+        return f'ключевое слово "{self.name}"'
 
 
-class Type(Structure):
+class VarKW(Structure):
+    REGEX = r'var'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(Type, self).__init__(line, line_text, name)
+        super(VarKW, self).__init__(line, line_text, name)
+    
+    def __repr__(self):
+        return f'ключевое слово "{self.name}"'
+
+
+class BeginKW(Structure):
+    REGEX = r'begin'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(BeginKW, self).__init__(line, line_text, name)
+    
+    def __repr__(self):
+        return f'ключевое слово "begin"'
+
+
+class TypeKW(Structure):
+    REGEX = r'(^integer$|^real|^boolean$)'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(TypeKW, self).__init__(line, line_text, name)
 
     def __repr__(self):
         return f'тип {self.name}'
 
 
-class EndProgram(Structure):
+class EndKW(Structure):
+    REGEX = r'(^end$)'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(EndProgram, self).__init__(line, line_text, name)
+        super(EndKW, self).__init__(line, line_text, name)
     
     def __repr__(self):
-        return f'окончание программы'
+        return f'ключевое слово "end"'
 
 
-class Read(Structure):
+class IntegerKW(Structure):
+    REGEX = r'^{0-9}+$'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(Read, self).__init__(line, line_text, name)
+        super(IntegerKW, self).__init__(line, line_text, name)
     
     def __repr__(self):
-        return f'ввод'
+        return f'целое число {self.name}'
 
 
-class Declare(Structure):
+class AssertionKW(Structure):
+    REGEX = r'^ass$'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(Declare, self).__init__(line, line_text, name)
+        super(AssertionKW, self).__init__(line, line_text, name)
     
     def __repr__(self):
-        return f'объявление переменной'
+        return f'назначение'
 
 
-class OpsBegin(Structure):
+class DotKW(Structure):
+    REGEX = r'\.'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(OpsBegin, self).__init__(line, line_text, name)
+        super(DotKW, self).__init__(line, line_text, name)
     
     def __repr__(self):
-        return f'начало составного оператора'
+        return f'точка'
 
 
-class EmptyLine(Structure):
+class ReadKW(Structure):
+    REGEX = r'^read$'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(EmptyLine, self).__init__(line, line_text, name)
+        super(ReadKW, self).__init__(line, line_text, name)
     
     def __repr__(self):
-        return f'пустая строка'
+        return f'ключевое слово read'
 
 
-class OpsEnd(Structure):
+class ForKW(Structure):
+    REGEX = r'^for$'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(OpsEnd, self).__init__(line, line_text, name)
+        super(ForKW, self).__init__(line, line_text, name)
     
     def __repr__(self):
-        return f'конец составного оператора'
+        return f'ключевое слово for'
 
 
-class KeyWord(Structure):
+class ComaKW(Structure):
+    REGEX = r'^\,$'
+
     def __init__(self, line : int, line_text: str, name : str):
-        super(KeyWord, self).__init__(line, line_text, name)
-    
+        super(ComaKW, self).__init__(line, line_text, name)
+
     def __repr__(self):
-        return f'ключевое слово {self.name}'
+        return f'запятая'
+    
 
+class CurlBracketCloseKW(Structure):
+    REGEX = r'^\}$'
 
-class Assignment(Structure):
     def __init__(self, line : int, line_text: str, name : str):
-        super(Assignment, self).__init__(line, line_text, name)
-    
-    def __repr__(self):
-        return f'назначение переменной {self.name}'
+        super(CurlBracketCloseKW, self).__init__(line, line_text, name)
 
+    def __repr__(self):
+        return f'закр. фигурная скобка'
+
+
+class CurlBracketOpenKW(Structure):
+    REGEX = r'^\{$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(CurlBracketOpenKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'откр. фигурная скобка'
+
+
+class BracketOpenKW(Structure):
+    REGEX = r'^\($'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(BracketOpenKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'откр. скобка'
+
+
+class BracketCloseKW(Structure):
+    REGEX = r'^\)$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(BracketCloseKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'закр. скобка'
+
+
+class WriteKW(Structure):
+    REGEX = r'^writeln$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(WriteKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'вывод выражения'
+
+
+class PlusKW(Structure):
+    REGEX = r'^\+$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(PlusKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'знак сложения'
+
+
+class MinusKW(Structure):
+    REGEX = r'^\-$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(MinusKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'знак вычитания'

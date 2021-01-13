@@ -1,9 +1,0 @@
-program var test begin do_something {;
-    {a1234b, {, a1234b integer}}
-    read(a1234b, {, a1234b})
-    begin do_something {;
-        a1234b ass 123
-    }end
-
-    4124gsgsdgsdgsdg
-} end.

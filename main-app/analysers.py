@@ -1,119 +1,74 @@
-from structures import Program
+from structures import Program, Lexem, IdentifierKW
 import structures
 import re
+import inspect
+import sys
 
 
-class LexicalAnalyser:
-    def _detect_type(self, line: str, i: int = None):
-        identifier = r'\w{1}\d+\w{1}'
-        program_begin = r'program var \w+ begin \w+ \{;'
-        types = r'(integer{1}|real{1}|boolean{1})'
-        end_program = r'\} end\.' 
-        read = r'read.+'
-        declare = r'\{' + identifier + r', \{, ' + identifier + r' ' + types + r'\}\}'
-        ops_begin = r'begin .+'
-        ops_end = r'}end'
-        operations = r'(\+{1}|\-{1}|/|\*)'
-        consts = r'(' + identifier + r'|\d+\.{1}\d+|true|false|\d+)'
-        asg = identifier + r' ass ' + consts + r'(' + operations + consts + r')*'
-        keywords = r'(ass|program var|begin|end|read|end\.|do while|for|if|then)'
+def get_structures():
+    structs = []
+    classes = inspect.getmembers(sys.modules['structures'], inspect.isclass)
+    for _class in classes:
+        if _class[0].endswith('KW'):
+            structs.append(_class[1])
 
-        kws = re.findall(keywords, line)
+    return structs
 
-        if len(kws) > 0 :
-            self.append_kws(kws, i, line)
 
-        if re.match(asg, line):
-            idents = re.findall(identifier, line)
-            self.append_idents(idents, i, line)
-            return 'Assignment', idents[0]
-        elif re.match(identifier, line):
-            return 'Identifier', re.match(identifier, line).group()
-        elif re.match(program_begin, line):
-            name = line.split(' ')[2].split('begin')[0]
-            return 'ProgramBegin', name
-        elif re.match(types, line):
-            return 'Type', re.match(types, line).group()
-        elif re.match(end_program, line):
-            return 'EndProgram', ''
-        elif re.match(read, line):
-            idents = re.findall(identifier, line)
-            self.append_idents(idents, i, line)
-            return 'Read', ''
-        elif re.match(declare, line):
-            idents = re.findall(identifier, line)
-            self.append_idents(idents, i, line)
-            return 'Declare', ''
-        elif re.match(ops_begin, line):
-            return 'OpsBegin', ''
-        elif re.match(ops_end, line):
-            return 'OpsEnd', ''
-    
-    def append_idents(self, idents: list, i: int, line: str):
-        for name in idents:
-            name = name.replace('}', '').replace(')', '').replace('{', '').replace(')', '').replace(', ', '')
-            self.append_el('Identifier', i, line, name)
-
-    def append_kws(self, kws: list, i: int, line: str):
-        for kw in kws:
-            kw = kw.replace('}', '').replace(')', '').replace('{', '').replace(')', '').replace(', ', '')
-            self.append_el('KeyWord', i, line, kw)
-
+class LexAnalyser:
     def __init__(self, program: Program):
-        self.program = program
-        self.unrec_comps = []
+        self._program = program
 
-        for line in self.program:
-            self.unrec_comps.append(line)
+    def analyse(self):
+        lexems = []
+        bracets = r'(\{|\}|\(|\)|\)|\,|\.)'
 
-        self.rec_compos = []
+        for i in range(len(self._program.lines)):
+            found_comments = re.findall(
+                r'\/\*.*\*\/', self._program.lines[i]
+            )
 
-    def _format_line(self, line: str):
-        p = r'\W{1}'
-        r = list(set(re.findall(p, line)))
+            for comment in found_comments: 
+                self._program.lines[i] = self._program.lines[i].replace(
+                    comment, ''
+                )
 
-        try:
-            r.remove(' ')
-        except ValueError:
-            print(r)
+            found_bracets = re.findall(bracets, self._program.lines[i])
+            
+            for bracet in found_bracets:
+                self._program.lines[i] = self._program.lines[i].replace(bracet, f' {bracet} ')
+            
+            found_spaces = re.findall(r'\s+', self._program.lines[i])
+            
+            for space in found_spaces:
+                self._program.lines[i] = self._program.lines[i].replace(space, ' ')
 
-        for e in r:
-            line = line.replace(e, '')
+            for lexem in self._program.lines[i].split(' '):
+                if lexem != '':
+                    lexems.append((Lexem(lexem), i))
 
-        line.replace(' ', ' ')
-        line = re.sub(' +', ' ', line)
-        return line
-
-    def _try_parse(self, line: str, i: int):
-        line = self._format_line(line)
-        lines = line.split(' ')
-
-        for l, i in zip(lines, range(len(lines))):
-            try:
-                structure, name = self._detect_type(l, i)
-            except TypeError:
-                raise structures.LexException(f'Не удалось обработать {line}')
-            else:
-                self.append_el(structure, i, line, name)
+        self.lexems = lexems
 
 
-    def append_el(self, structure: str, line: int, line_text: str, name: str = ''):
-        self.rec_compos.append(getattr(structures, structure)(
-                line = line,
-                line_text = line_text,
-                name = name,
-            ))
+class SyntaxAnalyzer:
+    def __init__(
+        self,
+        lexAnalyser: LexAnalyser,
+    ):
+        self.lexAnalyser = lexAnalyser
 
-    def start(self):
-        for i in range(len(self.program)):
-            line = self.program[i].rstrip().lstrip()
+    def anaylse(self):
+        syntaxes = []
 
-            if len(line) == 0:
-                continue
+        for lexem in self.lexAnalyser.lexems:
+            matched = False
+            for _class in get_structures():
+                if re.match(_class.REGEX, lexem[0].name):
+                    syntaxes.append(_class(lexem[1], self.lexAnalyser._program.lines[lexem[1]], lexem[0].name))
+                    matched = True
+            if not matched:
+                syntaxes.append(IdentifierKW(lexem[1], self.lexAnalyser._program.lines[lexem[1]], lexem[0].name))
+        
+        self.syntaxes = syntaxes
 
-            try:
-                structure, name = self._detect_type(line)
-            except TypeError:
-                self._try_parse(line, i)
-                continue
-            self.append_el(structure, i, line, name)
+        

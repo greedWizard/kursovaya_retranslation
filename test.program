@@ -1,6 +1,6 @@
-program var {a1234b, {, a1234b integer}}; begin do_something {;
+program var test begin {; {a1234b, {, a1234b integer}}
     read(a1234b, {, a1234b})
-    begin do_something {;
-        a1234b ass 123
+    begin {; /* somethings ass { } . end end end endend end end end end end end end end end end end  */
+        a1234b ass 123 - 3
     }end
 } end.

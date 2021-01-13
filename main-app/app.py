@@ -1,4 +1,4 @@
-from analysers import LexicalAnalyser
+from analysers import LexAnalyser, SyntaxAnalyzer
 from structures import Program
 
 
@@ -8,8 +8,9 @@ with open('test.program', 'rt') as f:
     test_text = f.read()
 
 program = Program(test_text)
-la = LexicalAnalyser(program)
-la.start()
+la = LexAnalyser(program)
+la.analyse()
 
-for _ in la.rec_compos:
-    print(str(_))
+syntaxAnalyser = SyntaxAnalyzer(la)
+syntaxAnalyser.anaylse()
+print(syntaxAnalyser.syntaxes)
