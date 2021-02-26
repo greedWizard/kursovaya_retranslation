@@ -63,6 +63,12 @@ class Structure:
     def check_syntax(self):
         raise NotImplementedError('Not implemented')
 
+    def __repr__(self):
+        return f"<{self.name}>"
+
+    def __str__(self):
+        return f"<{self.name}>"
+
 
 class IdentifierKW(Structure):
     REGEX = r'^[a-z]{1}[0-9]+[a-z]{1}$'
@@ -72,6 +78,13 @@ class IdentifierKW(Structure):
     
     def __repr__(self):
         return f'идентификатор "{self.name}"'
+
+
+class Operator:
+    words = []
+
+    def __init__(self, words):
+        self.words = words
 
 
 class ProgramKW(Structure):
@@ -125,13 +138,33 @@ class EndKW(Structure):
 
 
 class IntegerKW(Structure):
-    REGEX = r'^{0-9}+$'
+    REGEX = r'^\d+$'
 
     def __init__(self, line : int, line_text: str, name : str):
         super(IntegerKW, self).__init__(line, line_text, name)
     
     def __repr__(self):
         return f'целое число {self.name}'
+
+
+class RealKW(Structure):
+    REGEX = r'^\d+\.\d+$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(RealKW, self).__init__(line, line_text, name)
+    
+    def __repr__(self):
+        return f'дробное число число {self.name}'
+
+
+class SemiColumnKW(Structure):
+    REGEX = r'^;$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(SemiColumnKW, self).__init__(line, line_text, name)
+    
+    def __repr__(self):
+        return f'точка с запятой'
 
 
 class AssertionKW(Structure):
@@ -145,7 +178,7 @@ class AssertionKW(Structure):
 
 
 class DotKW(Structure):
-    REGEX = r'\.'
+    REGEX = r'^\.$'
 
     def __init__(self, line : int, line_text: str, name : str):
         super(DotKW, self).__init__(line, line_text, name)
@@ -234,21 +267,50 @@ class WriteKW(Structure):
         return f'вывод выражения'
 
 
-class PlusKW(Structure):
-    REGEX = r'^\+$'
+
+class OperationKW(Structure):
+    REGEX = r'^(\-|\+|\*|\/)$'
 
     def __init__(self, line : int, line_text: str, name : str):
-        super(PlusKW, self).__init__(line, line_text, name)
+        super(OperationKW, self).__init__(line, line_text, name)
 
     def __repr__(self):
-        return f'знак сложения'
+        return f'арифм. операция {self.name}'
 
 
-class MinusKW(Structure):
-    REGEX = r'^\-$'
+class ColumnKW(Structure):
+    REGEX = r'^\:$'
 
     def __init__(self, line : int, line_text: str, name : str):
-        super(MinusKW, self).__init__(line, line_text, name)
+        super(ColumnKW, self).__init__(line, line_text, name)
 
     def __repr__(self):
-        return f'знак вычитания'
+        return f'двоеточие'
+
+
+FOLLOWING_MATRIX = [
+    [
+        ProgramKW, VarKW
+    ],
+    [
+        CurlBracketOpenKW, IdentifierKW, CurlBracketOpenKW, ComaKW, IdentifierKW, CurlBracketCloseKW, ColumnKW, TypeKW, SemiColumnKW, CurlBracketCloseKW,
+    ],
+    [
+        BeginKW, CurlBracketOpenKW, SemiColumnKW,
+    ],
+    [
+        ReadKW, BracketOpenKW, IdentifierKW, ComaKW, CurlBracketOpenKW, ComaKW, IdentifierKW, CurlBracketCloseKW, BracketCloseKW,
+    ],
+    [
+        BeginKW, CurlBracketOpenKW, SemiColumnKW
+    ],
+    [
+        IdentifierKW, AssertionKW, IntegerKW,
+    ],
+    [
+        OperationKW, RealKW,
+    ],
+    # [
+    #     CurlBracketOpenKW, CurlBracketCloseKW
+    # ],
+]

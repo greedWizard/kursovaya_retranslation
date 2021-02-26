@@ -13,4 +13,3 @@ la.analyse()
 
 syntaxAnalyser = SyntaxAnalyzer(la)
 syntaxAnalyser.anaylse()
-print(syntaxAnalyser.syntaxes)
