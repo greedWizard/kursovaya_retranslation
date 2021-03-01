@@ -16,11 +16,11 @@ def get_structures():
     return structs
 
 
-class LexAnalyser:
+class PreProcessor:
     def __init__(self, program: Program):
         self._program = program
 
-    def analyse(self):
+    def process(self):
         lexems = []
         bracets = r'(\{|\}|\(|\)|\)|\,|^end\.{1}$)'
 
@@ -52,79 +52,119 @@ class LexAnalyser:
         self.lexems = lexems
 
 
-class SyntaxAnalyzer:
+class Analyser:
     def __init__(
         self,
-        lexAnalyser: LexAnalyser,
+        preProcessor: PreProcessor,
     ):
-        self.lexAnalyser = lexAnalyser
+        self.preProcessor = preProcessor
 
-        variable = [
-            structures.IdentifierKW, structures.TypeKW
-        ]
-        description = [
-            structures.CurlBracketOpenKW, structures.IdentifierKW, structures.CurlBracketOpenKW,
-            structures.ComaKW, variable, 
-        ]
-        program_struct = [
-            structures.ProgramKW, structures.VarKW, description, 
-            structures.BeginKW, structures.CurlBracketOpenKW, structures.SemiColumnKW,
-            structures.Operator, structures.CurlBracketCloseKW, structures.EndKW,
-            structures.DotKW,
-        ]
+    def _find_last(self, lexem_name):
+        last = None
+        prev = None
+
+        for lexem in self.lexems:
+            if lexem.name == lexem_name:
+                last = lexem
+                break
+        
+        return last
 
     def _find_errors(self):
         bracets = r'(\{|\}|\(|\)|\)|\,|^end$|^begin$)'
         errors = []
-        
-        begins = 0
-        ends = 0
-        bracets_op = 0
-        curl_bracets_op = 0
-        bracets_cl = 0
-        curl_bracets_cl = 0
+
+        self.begins = 0
+        self.ends = 0
+        self.bracets_op = 0
+        self.curl_bracets_op = 0
+        self.bracets_cl = 0
+        self.curl_bracets_cl = 0
+        self.loop = 0
+        self.nxt = 0
+        self.sqr_bracket_close = 0
+        self.sqr_bracket_open = 0
+        self.whl = 0
 
         for lexem in self.lexems:
             if lexem.name == 'begin':
-                begins += 1
+                self.begins += 1
             elif lexem.name == 'end':
-                ends += 1
+                self.ends += 1
             elif lexem.name == '{':
-                curl_bracets_op += 1
+                self.curl_bracets_op += 1
             elif lexem.name == '}':
-                curl_bracets_cl += 1
+                self.curl_bracets_cl += 1
+            elif lexem.name == '(':
+                self.bracets_op += 1
+            elif lexem.name == ')':
+                self.bracets_cl += 1
+            elif lexem.name == 'loop':
+                self.loop += 1
+            elif lexem.name == 'next':
+                self.nxt += 1
+            elif lexem.name == '[':
+                self.sqr_bracket_open += 1
+            elif lexem.name == ']':
+                self.sqr_bracket_close += 1
+            elif lexem.name == 'while':
+                self.whl += 1
 
-        if curl_bracets_cl != curl_bracets_op:
-            errors.append()
+        error = None
+
+        if self.curl_bracets_cl > self.curl_bracets_op:
+            error = self._find_last('}')
+        if self.curl_bracets_cl < self.curl_bracets_op:
+            error = self._find_last('{')
+        if self.bracets_cl > self.bracets_op:
+            error = self._find_last(')')
+        if self.bracets_cl < self.bracets_op:
+            error = self._find_last('(')
+        if self.ends > self.begins:
+            error = self._find_last('end')
+        if self.ends < self.begins:
+            error = self._find_last('begin')
+        if self.whl < self.loop:
+            error = self._find_last('loop')
+        if self.whl > self.loop:
+            error = self._find_last('while')
+        
+        if error:
+            raise SyntaxError(f'Ошибка в строке {error.line}: {error.line_text} -> {error.name} - ошибка синтаксиса')
     
     def _check_syntax(self):
-        checked = []
         i = 0
+        checked = []
         while i < len(self.lexems):
-            last_index = i
-            match = True
-            for check_list in FOLLOWING_MATRIX:
-                for check in check_list:
-                    print(check.REGEX, self.lexems[i])
-                    if not re.match(check.REGEX, self.lexems[i].name):
-                        match = False
-                        i = last_index
-                        break
-                    else:
-                        i += 1
-                if match:
-                    break
-            if not match:
+            if i > 0 and (
+                self.lexems[i].TYPE == 'operation' and self.lexems[i-1].TYPE == 'keyword'
+            ):
                 raise SyntaxError(f'Ошибка в строке {self.lexems[i].line}: {self.lexems[i].line_text} -> {self.lexems[i].name} Ошибка синтаксиса')
-            i += 1
 
-    def anaylse(self):
+            last_i = i
+            matched_len = 0
+            for seq in FOLLOWING_MATRIX:
+                matched = True
+                for j in range(len(seq)):
+                    if seq[j].REGEX != self.lexems[i].REGEX:
+                        matched = False
+                        matched_len = 0
+                        i = last_i
+                        break
+                    i += 1
+                    matched_len += 1
+                if matched_len == len(seq):
+                    break
+            if not matched:
+                raise SyntaxError(f'Ошибка в строке {self.lexems[i].line}: {self.lexems[i].line_text} -> {self.lexems[i].name} Ошибка синтаксиса')
+
+    def syntax_analyse(self):
         syntaxes = []
 
-        for lexem in self.lexAnalyser.lexems:
+        for lexem in self.preProcessor.lexems:
             matched = False
             for _class in get_structures():
-                new_lexem = _class(lexem[1]+1, self.lexAnalyser._program.lines[lexem[1]], lexem[0].name)
+                new_lexem = _class(lexem[1]+1, self.preProcessor._program.lines[lexem[1]], lexem[0].name)
                 if re.match(_class.REGEX, lexem[0].name):
                     syntaxes.append(new_lexem)
                     matched = True
@@ -132,6 +172,6 @@ class SyntaxAnalyzer:
                 raise LexError(f'Ошибка в строке {new_lexem.line}: "{new_lexem.line_text}" -> {new_lexem.name} - неопознанная лексема.')
 
         self.lexems = syntaxes
-        # self._find_errors()
+        self._find_errors()
 
         self._check_syntax()

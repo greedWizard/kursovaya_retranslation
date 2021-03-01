@@ -55,6 +55,8 @@ class Program:
 
 
 class Structure:
+    TYPE = 'keyword'
+
     def __init__(self, line : int, line_text: str, name: str = ''):
         self.name = name
         self.line = line
@@ -138,7 +140,8 @@ class EndKW(Structure):
 
 
 class IntegerKW(Structure):
-    REGEX = r'^\d+$'
+    REGEX = r'^\-?\d+$'
+    TYPE = 'variable'
 
     def __init__(self, line : int, line_text: str, name : str):
         super(IntegerKW, self).__init__(line, line_text, name)
@@ -149,6 +152,7 @@ class IntegerKW(Structure):
 
 class RealKW(Structure):
     REGEX = r'^\d+\.\d+$'
+    TYPE = 'variable'
 
     def __init__(self, line : int, line_text: str, name : str):
         super(RealKW, self).__init__(line, line_text, name)
@@ -219,6 +223,7 @@ class ComaKW(Structure):
 
 class CurlBracketCloseKW(Structure):
     REGEX = r'^\}$'
+    TYPE = 'bracket'
 
     def __init__(self, line : int, line_text: str, name : str):
         super(CurlBracketCloseKW, self).__init__(line, line_text, name)
@@ -239,6 +244,7 @@ class CurlBracketOpenKW(Structure):
 
 class BracketOpenKW(Structure):
     REGEX = r'^\($'
+    TYPE = 'bracket'
 
     def __init__(self, line : int, line_text: str, name : str):
         super(BracketOpenKW, self).__init__(line, line_text, name)
@@ -259,6 +265,7 @@ class BracketCloseKW(Structure):
 
 class WriteKW(Structure):
     REGEX = r'^writeln$'
+    TYPE = 'keyword'
 
     def __init__(self, line : int, line_text: str, name : str):
         super(WriteKW, self).__init__(line, line_text, name)
@@ -270,6 +277,7 @@ class WriteKW(Structure):
 
 class OperationKW(Structure):
     REGEX = r'^(\-|\+|\*|\/)$'
+    TYPE = 'operation'
 
     def __init__(self, line : int, line_text: str, name : str):
         super(OperationKW, self).__init__(line, line_text, name)
@@ -288,10 +296,137 @@ class ColumnKW(Structure):
         return f'двоеточие'
 
 
+class IfKW(Structure):
+    REGEX = r'^if$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(IfKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово if'
+
+
+class ThenKW(Structure):
+    REGEX = r'^then$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(ThenKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово then'
+
+
+class SqBracketOpenKW(Structure):
+    REGEX = r'^\[$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(SqBracketOpenKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'^[$'
+
+
+class SqBracketCloseKW(Structure):
+    REGEX = r'^\]$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(SqBracketCloseKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f']'
+
+
+class ElseKW(Structure):
+    REGEX = r'^else$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(ElseKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово else'
+
+
+class DoKW(Structure):
+    REGEX = r'^do$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(DoKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово do'
+
+
+class LoopKW(Structure):
+    REGEX = r'^loop$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(LoopKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово loop'
+
+
+class WhileKW(Structure):
+    REGEX = r'^while$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(WhileKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово while'
+
+
+class BooleanKW(Structure):
+    REGEX = r'^(true|false)$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(BooleanKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово then'
+
+
+class ComparisonKW(Structure):
+    REGEX = r'^(\<|\>|\>\=|\<\=|\=\=|\!\=)$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(ComparisonKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'операция сравнения {self.name}'
+
+
+class ToKW(Structure):
+    REGEX = r'^to$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(ToKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово to'
+
+
+class StepKW(Structure):
+    REGEX = r'^step$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(StepKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово step'
+
+
+class NextKW(Structure):
+    REGEX = r'^next$'
+
+    def __init__(self, line : int, line_text: str, name : str):
+        super(NextKW, self).__init__(line, line_text, name)
+
+    def __repr__(self):
+        return f'ключевое слово next'
+
+
 FOLLOWING_MATRIX = [
-    [
-        ProgramKW, VarKW
-    ],
     [
         CurlBracketOpenKW, IdentifierKW, CurlBracketOpenKW, ComaKW, IdentifierKW, CurlBracketCloseKW, ColumnKW, TypeKW, SemiColumnKW, CurlBracketCloseKW,
     ],
@@ -299,7 +434,13 @@ FOLLOWING_MATRIX = [
         BeginKW, CurlBracketOpenKW, SemiColumnKW,
     ],
     [
+        ProgramKW, VarKW
+    ],
+    [
         ReadKW, BracketOpenKW, IdentifierKW, ComaKW, CurlBracketOpenKW, ComaKW, IdentifierKW, CurlBracketCloseKW, BracketCloseKW,
+    ],
+    [
+        CurlBracketCloseKW, EndKW, DotKW,
     ],
     [
         BeginKW, CurlBracketOpenKW, SemiColumnKW
@@ -310,7 +451,70 @@ FOLLOWING_MATRIX = [
     [
         OperationKW, RealKW,
     ],
-    # [
-    #     CurlBracketOpenKW, CurlBracketCloseKW
-    # ],
+    [
+        CurlBracketCloseKW, EndKW,
+    ],
+    [
+        IfKW, BooleanKW,
+    ],
+    [
+        ThenKW,
+    ],
+    [
+        SqBracketOpenKW, ElseKW, 
+    ],
+    [
+        SqBracketCloseKW,
+    ],
+    [
+        DoKW, WhileKW, 
+    ],
+    [
+        IntegerKW, ComparisonKW, IntegerKW,
+    ],
+    [
+        RealKW, ComparisonKW, RealKW,
+    ],
+    [
+        LoopKW,
+    ],
+    [
+        CurlBracketOpenKW, ComaKW,
+    ],
+    [
+        CurlBracketCloseKW,
+    ],
+    [
+        ForKW
+    ],
+    [
+        ToKW, 
+    ],
+    [
+        SqBracketOpenKW, StepKW, 
+    ],
+    [
+        SqBracketCloseKW,
+    ],
+    [
+        NextKW,
+    ],
+    [
+        BracketOpenKW, IntegerKW, OperationKW,
+    ],
+    [
+        IntegerKW, BracketCloseKW,
+    ],
+    [
+        BracketOpenKW, RealKW, OperationKW,
+    ],
+    [
+        RealKW, BracketCloseKW,
+    ],
+    [
+        OperationKW, IntegerKW,
+    ],
+    [
+        OperationKW, RealKW,
+    ]
 ]

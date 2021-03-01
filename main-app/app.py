@@ -1,4 +1,4 @@
-from analysers import LexAnalyser, SyntaxAnalyzer
+from analysers import PreProcessor, Analyser
 from structures import Program
 
 
@@ -8,8 +8,9 @@ with open('test.program', 'rt') as f:
     test_text = f.read()
 
 program = Program(test_text)
-la = LexAnalyser(program)
-la.analyse()
+pp = PreProcessor(program)
+pp.process()
 
-syntaxAnalyser = SyntaxAnalyzer(la)
-syntaxAnalyser.anaylse()
+analyser = Analyser(pp)
+analyser.syntax_analyse()
+print(analyser.lexems)
