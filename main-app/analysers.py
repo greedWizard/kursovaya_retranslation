@@ -1,4 +1,4 @@
-from structures import Program, Lexem, IdentifierKW, LexError, FOLLOWING_MATRIX
+from structures import Program, Lexem, IdentifierKW, LexError, FOLLOWING_MATRIX, get_define_pattern, unique_identifiers, SymanticError
 import structures
 import re
 import inspect
@@ -18,34 +18,35 @@ def get_structures():
 
 class PreProcessor:
     def __init__(self, program: Program):
-        self._program = program
+        self.program = program
+        self.process()
 
     def process(self):
         lexems = []
         bracets = r'(\{|\}|\(|\)|\)|\,|^end\.{1}$)'
 
-        for i in range(len(self._program.lines)):
-            self._program.lines[i] = self._program.lines[i].replace('end.', 'end .')
+        for i in range(len(self.program.lines)):
+            self.program.lines[i] = self.program.lines[i].replace('end.', 'end .')
             found_comments = re.findall(
-                r'\/\*.*\*\/', self._program.lines[i]
+                r'\/\*.*\*\/', self.program.lines[i]
             )
 
             for comment in found_comments: 
-                self._program.lines[i] = self._program.lines[i].replace(
+                self.program.lines[i] = self.program.lines[i].replace(
                     comment, ''
                 )
 
-            found_bracets = re.findall(bracets, self._program.lines[i])
+            found_bracets = re.findall(bracets, self.program.lines[i])
             
             for bracet in found_bracets:
-                self._program.lines[i] = self._program.lines[i].replace(bracet, f' {bracet} ')
+                self.program.lines[i] = self.program.lines[i].replace(bracet, f' {bracet} ')
             
-            found_spaces = re.findall(r'\s+', self._program.lines[i])
+            found_spaces = re.findall(r'\s+', self.program.lines[i])
             
             for space in found_spaces:
-                self._program.lines[i] = self._program.lines[i].replace(space, ' ')
+                self.program.lines[i] = self.program.lines[i].replace(space, ' ')
 
-            for lexem in self._program.lines[i].split(' '):
+            for lexem in self.program.lines[i].split(' '):
                 if lexem != '':
                     lexems.append((Lexem(lexem), i))
 
@@ -59,6 +60,11 @@ class Analyser:
     ):
         self.preProcessor = preProcessor
 
+    def get_lexems(self):
+        self.lexical_analyse()
+
+        return self.lexems
+
     def _find_last(self, lexem_name):
         last = None
         prev = None
@@ -70,7 +76,16 @@ class Analyser:
         
         return last
 
+    def _check_structure(self):
+        starting = r'^program var .+ begin'
+        struct = re.findall(starting, self.preProcessor.program.text)
+        init = len(struct)
+        print(struct)
+        if init != 1:
+            raise SyntaxError('Синтаксическая ошибка: нарушена структура программы')
+
     def _find_errors(self):
+        self._check_structure
         bracets = r'(\{|\}|\(|\)|\)|\,|^end$|^begin$)'
         errors = []
 
@@ -85,6 +100,7 @@ class Analyser:
         self.sqr_bracket_close = 0
         self.sqr_bracket_open = 0
         self.whl = 0
+        self.prgm = 0
 
         for lexem in self.lexems:
             if lexem.name == 'begin':
@@ -109,6 +125,8 @@ class Analyser:
                 self.sqr_bracket_close += 1
             elif lexem.name == 'while':
                 self.whl += 1
+            elif lexem.name == 'program':
+                self.prgm += 1
 
         error = None
 
@@ -158,20 +176,51 @@ class Analyser:
             if not matched:
                 raise SyntaxError(f'Ошибка в строке {self.lexems[i].line}: {self.lexems[i].line_text} -> {self.lexems[i].name} Ошибка синтаксиса')
 
-    def syntax_analyse(self):
-        syntaxes = []
+    def lexical_analyse(self):
+        lexems = []
 
         for lexem in self.preProcessor.lexems:
             matched = False
             for _class in get_structures():
-                new_lexem = _class(lexem[1]+1, self.preProcessor._program.lines[lexem[1]], lexem[0].name)
+                new_lexem = _class(lexem[1]+1, self.preProcessor.program.lines[lexem[1]], lexem[0].name)
                 if re.match(_class.REGEX, lexem[0].name):
-                    syntaxes.append(new_lexem)
+                    lexems.append(new_lexem)
                     matched = True
             if not matched:
                 raise LexError(f'Ошибка в строке {new_lexem.line}: "{new_lexem.line_text}" -> {new_lexem.name} - неопознанная лексема.')
 
-        self.lexems = syntaxes
+        self.lexems = lexems
+
+    def syntax_analyse(self):
+        self._check_structure()
         self._find_errors()
 
         self._check_syntax()
+
+    def get_identifiers(self):
+        identifiers = []
+
+        for lexem in self.lexems:
+            if lexem.REGEX == IdentifierKW.REGEX:
+                identifiers.append(lexem)
+
+        identifiers = unique_identifiers(identifiers)
+
+        return identifiers
+
+    def _check_defined_idents(self, identifiers):
+        full_text = self.preProcessor.program.text.replace('\n', ' ')
+
+        for ident in identifiers:
+            pattern = get_define_pattern(ident).replace('^', '').replace('$', '')
+            defined_num = len(re.findall(pattern, full_text))
+
+            if defined_num == 0:
+                raise SymanticError(f'Ошибка в строке {ident.line}: "{ident.line_text}" -> {ident.name} - Необъявленный идентификатор')
+            if defined_num > 1:
+                raise SymanticError(f'Ошибка в строке {ident.line}: "{ident.line_text}" -> {ident.name} - Многократное объявление')
+
+    def symantic_analyse(self):
+        identifiers = self.get_identifiers()
+        self._check_defined_idents(identifiers)
+        

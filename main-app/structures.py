@@ -14,6 +14,10 @@ class SyntaxError(Error):
     pass
 
 
+class SymanticError(Error):
+    pass
+
+
 class Lexem:
     def __init__(self, name):
         self.name = name
@@ -27,12 +31,12 @@ class Lexem:
 
 class ProgramIterator:
     def __init__(self, program):
-        self._program = program
+        self.program = program
         self._index = 0
 
     def __next__(self):
-        if self._index < len(self._program.lines):
-            r = self._program.lines[self._index]
+        if self._index < len(self.program.lines):
+            r = self.program.lines[self._index]
             self._index += 1
             return r
         raise StopIteration()
@@ -42,6 +46,7 @@ class Program:
     name = ''
 
     def __init__(self, text : str):
+        self.text = text
         self.lines = text.split('\n')
         
     def __iter__(self):
@@ -65,11 +70,8 @@ class Structure:
     def check_syntax(self):
         raise NotImplementedError('Not implemented')
 
-    def __repr__(self):
-        return f"<{self.name}>"
-
     def __str__(self):
-        return f"<{self.name}>"
+        return self.__repr__()
 
 
 class IdentifierKW(Structure):
@@ -80,6 +82,9 @@ class IdentifierKW(Structure):
     
     def __repr__(self):
         return f'идентификатор "{self.name}"'
+
+    def __eq__(self, other):
+        return self.name == other.name
 
 
 class Operator:
@@ -426,6 +431,25 @@ class NextKW(Structure):
         return f'ключевое слово next'
 
 
+def get_define_pattern(identifier):
+    pattern = CurlBracketOpenKW.REGEX + identifier.name + r'\s+' + CurlBracketOpenKW.REGEX + ComaKW.REGEX + r'\s+' + identifier.name + CurlBracketCloseKW.REGEX + ColumnKW.REGEX + r'\s+' + TypeKW.REGEX + r'\s+' + SemiColumnKW.REGEX + CurlBracketCloseKW.REGEX
+    return pattern
+
+
+def unique_identifiers(identifiers):
+    uniques = []
+
+    for identifier in identifiers:
+        not_in = True
+        for unique in uniques:
+            if unique == identifier:
+                not_in = False
+        if not_in:
+            uniques.append(identifier)
+
+    return uniques
+
+
 FOLLOWING_MATRIX = [
     [
         CurlBracketOpenKW, IdentifierKW, CurlBracketOpenKW, ComaKW, IdentifierKW, CurlBracketCloseKW, ColumnKW, TypeKW, SemiColumnKW, CurlBracketCloseKW,
@@ -518,3 +542,4 @@ FOLLOWING_MATRIX = [
         OperationKW, RealKW,
     ]
 ]
+
