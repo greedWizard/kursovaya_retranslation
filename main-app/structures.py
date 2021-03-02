@@ -537,6 +537,12 @@ FOLLOWING_MATRIX = [
     ],
     [
         OperationKW, RealKW,
-    ]
+    ],
+    [
+        OperationKW, IdentifierKW,
+    ],
+    [
+        IdentifierKW, AssertionKW, IdentifierKW,
+    ],
 ]
 

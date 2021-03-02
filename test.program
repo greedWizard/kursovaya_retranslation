@@ -1,11 +1,7 @@
 program var {a1234b {, a1234b}: integer ;} {b1234a {, b1234a}: integer ;} begin {;
     read(a1234b, {, a1234b})
+    read(b1234a, {, b1234a})
     begin {; 
-        a1234b ass 123 - 3.5
-        a1234b ass 123
-
-        do while 1 != 1
-        a1234b ass -123 - 1
-        loop
+        a1234b ass a1234b * a1234b + b1234a * b1234a
     }end
 } end.
