@@ -1,4 +1,4 @@
-program var {a1234b {, a1234b}: integer ;} begin {;
+program var {a1234b {, a1234b}: integer ;} {b1234a {, b1234a}: integer ;} begin {;
     read(a1234b, {, a1234b})
     begin {; 
         a1234b ass 123 - 3.5

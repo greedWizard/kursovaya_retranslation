@@ -80,7 +80,6 @@ class Analyser:
         starting = r'^program var .+ begin'
         struct = re.findall(starting, self.preProcessor.program.text)
         init = len(struct)
-        print(struct)
         if init != 1:
             raise SyntaxError('Синтаксическая ошибка: нарушена структура программы')
 
@@ -216,9 +215,9 @@ class Analyser:
             defined_num = len(re.findall(pattern, full_text))
 
             if defined_num == 0:
-                raise SymanticError(f'Ошибка в строке {ident.line}: "{ident.line_text}" -> {ident.name} - Необъявленный идентификатор')
+                raise SymanticError(f'Ошибка в строке {ident.line}: "{ident.line_text[:50]}" -> {ident.name} - Необъявленный идентификатор')
             if defined_num > 1:
-                raise SymanticError(f'Ошибка в строке {ident.line}: "{ident.line_text}" -> {ident.name} - Многократное объявление')
+                raise SymanticError(f'Ошибка в строке {ident.line}: "{ident.line_text[:50]}" -> {ident.name} - Многократное объявление')
 
     def symantic_analyse(self):
         identifiers = self.get_identifiers()

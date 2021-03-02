@@ -485,10 +485,7 @@ FOLLOWING_MATRIX = [
         ThenKW,
     ],
     [
-        SqBracketOpenKW, ElseKW, 
-    ],
-    [
-        SqBracketCloseKW,
+        ElseKW, 
     ],
     [
         DoKW, WhileKW, 

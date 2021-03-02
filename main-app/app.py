@@ -67,7 +67,7 @@ class MainApp(tk.Tk):
         self.lexems.grid(row=1, column=1, sticky=tk.N)
 
         tk.Label(container, text='Возникшие ошибки').grid(row=0, column=2, sticky=tk.W)
-        self.errors = tk.Listbox(container, height=25, width=100)
+        self.errors = tk.Listbox(container, height=5, width=100)
         self.errors.grid(row=1, column=2, sticky=tk.N)
 
         self.syntaxButton = tk.Button(container, text="Синтаксический анализ", command=self.syntax_analyse)
@@ -79,12 +79,6 @@ class MainApp(tk.Tk):
         self.symanticButton.config(state=tk.DISABLED)
 
         self.symanticButton.grid(column=0, row=5)
-
-
-test_text = ''
-
-with open('test.program', 'rt') as f:
-    test_text = f.read()
 
 
 main_app = MainApp()
