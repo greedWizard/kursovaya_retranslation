@@ -544,5 +544,8 @@ FOLLOWING_MATRIX = [
     [
         IdentifierKW, AssertionKW, IdentifierKW,
     ],
+    [
+        WriteKW, IdentifierKW, CurlBracketOpenKW, ComaKW, IdentifierKW, CurlBracketCloseKW
+    ]
 ]
 
